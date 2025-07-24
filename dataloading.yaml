@@ -1,29 +1,47 @@
 name: Load Elliptic Bitcoin Dataset
-description: Load the Elliptic Bitcoin dataset and save as a PyTorch Geometric data object.
+description: Loads the EllipticBitcoinDataset and saves as a PyTorch data file.
+
 inputs:
-  - name: root_path
-    type: String
-    description: Directory to store/download Elliptic dataset
-    default: /data/elliptic
-  - name: output_path
-    type: String
-    description: File path to save the PyG Data object
-    default: /shared/elliptic_raw.pt
+  - { name: root_path, type: String } # folder where data will be downloaded/stored
 
 outputs:
-  - name: elliptic_data
-    type: File
-    description: PyTorch Geometric data object
-    path: { output_path }
+  - { name: output_path, type: Model } # output file, e.g., data/data.pt
 
 implementation:
   container:
-    image: my-pyg-image:latest # <-- Replace with your built Docker image
-    command: ["python", "load_elliptic_data.py"]
+    image: python:3.9
+    command:
+      - sh
+      - -c
+      - |
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet torch torch_geometric || \
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet torch torch_geometric --user
+        exec "$0" "$@"
+      - python3
+      - -u
+      - -c
+      - |
+        import torch
+        from torch_geometric.datasets import EllipticBitcoinDataset
+        import argparse
+        import os
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--root_path', type=str, required=True)
+        parser.add_argument('--output_path', type=str, required=True)
+        args = parser.parse_args()
+
+        os.makedirs(args.root_path, exist_ok=True)
+        os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
+
+        print("Loading Elliptic Bitcoin dataset...")
+        dataset = EllipticBitcoinDataset(root=args.root_path)
+        data = dataset[0]
+        torch.save(data, args.output_path)
+        print(f"Saved raw data to {args.output_path}")
+
     args:
-      [
-        "--root_path",
-        { inputValue: root_path },
-        "--output_path",
-        { outputPath: elliptic_data },
-      ]
+      - --root_path
+      - { inputValue: root_path }
+      - --output_path
+      - { outputPath: output_path }
