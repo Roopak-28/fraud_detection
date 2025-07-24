@@ -1,0 +1,29 @@
+name: Load Elliptic Bitcoin Dataset
+description: Load the Elliptic Bitcoin dataset and save as a PyTorch Geometric data object.
+inputs:
+  - name: root_path
+    type: String
+    description: Directory to store/download Elliptic dataset
+    default: /data/elliptic
+  - name: output_path
+    type: String
+    description: File path to save the PyG Data object
+    default: /shared/elliptic_raw.pt
+
+outputs:
+  - name: elliptic_data
+    type: File
+    description: PyTorch Geometric data object
+    path: { output_path }
+
+implementation:
+  container:
+    image: my-pyg-image:latest # <-- Replace with your built Docker image
+    command: ["python", "load_elliptic_data.py"]
+    args:
+      [
+        "--root_path",
+        { inputValue: root_path },
+        "--output_path",
+        { outputPath: elliptic_data },
+      ]
