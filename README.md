@@ -1,3 +1,3 @@
 # fraud_detection
 
-[load_dataset] -> [preprocess] -> [model_def (GAT/GCN)] -> [train] -> [evaluate]
+[load_dataset] -> [preprocess] -> [model_def (TGCN/GCN)] -> [train] -> [evaluate]
